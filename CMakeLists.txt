@@ -10,4 +10,6 @@ add_executable(lab_4_2026
         Student.cpp
         BinarySearchTree.h
         BinarySearchTree.cpp
-        main.cpp)
+        main.cpp
+        Testing.cpp
+        Testing.h)
