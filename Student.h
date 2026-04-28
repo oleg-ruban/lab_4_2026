@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
 
-struct Student {
+struct Student
+{
     std::string name;
     double avgGrade;
     bool wantsToLearn;

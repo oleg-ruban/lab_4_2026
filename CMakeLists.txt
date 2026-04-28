@@ -12,4 +12,7 @@ add_executable(lab_4_2026
         BinarySearchTree.cpp
         main.cpp
         Testing.cpp
-        Testing.h)
+        Testing.h
+        PriorityQueue.h
+        AVLTree.cpp
+        AVLTree.h)

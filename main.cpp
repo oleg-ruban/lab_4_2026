@@ -1,14 +1,19 @@
 #include <iostream>
 #include "Testing.h"
 
-int main() {
-    std::cout << "Запуск тестування бази даних..." << std::endl;
-
-    if (testBinarySearchTree()) {
-        std::cout << "\n[SUCCESS] Програма пройшла всі тести." << std::endl;
-    } else {
-        std::cout << "\n[FAILED] У реалізації дерева є помилки." << std::endl;
+int main()
+{
+    // 1. Перевіряємо коректність роботи BST через std::set
+    if (testBinarySearchTree())
+    {
+        std::cout << "\n[OK] Базові операції працюють правильно." << std::endl;
     }
+
+    // 2. Порівнюємо продуктивність та висоту
+    runBalanceComparison();
+
+    // 3. тестуємо Бінарну купу
+    testPriorityQueue();
 
     return 0;
 }

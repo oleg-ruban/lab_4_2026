@@ -4,14 +4,19 @@
 #include "Student.h"
 #include <vector>
 
-struct Node {
+struct Node
+{
     Student data;
     Node* left;
     Node* right;
-    Node(Student s) : data(s), left(nullptr), right(nullptr) {}
+
+    Node(Student s) : data(s), left(nullptr), right(nullptr)
+    {
+    }
 };
 
-class BinarySearchTree {
+class BinarySearchTree
+{
 private:
     Node* root;
     size_t treeSize;
@@ -36,7 +41,7 @@ public:
     void print() const;
     int height() const;
     std::vector<Student> findInRange(Student minS, Student maxS) const;
-    
+
     static bool isSameTree(Node* t1, Node* t2);
     Node* getRoot() const { return root; }
 };
