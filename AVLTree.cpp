@@ -1,20 +1,24 @@
 #include "AVLTree.h"
-#include <iostream>
 
-// --- Приватні методи балансування ---
+// --- update ---
+void AVLTree::update(AVLNode* n)
+{
+    if (!n) return;
+    n->height = 1 + std::max(getHeight(n->left), getHeight(n->right));
+    n->size = 1 + getSize(n->left) + getSize(n->right);
+}
 
+// --- rotations ---
 AVLNode* AVLTree::rotateRight(AVLNode* y)
 {
     AVLNode* x = y->left;
     AVLNode* T2 = x->right;
 
-    // Виконуємо поворот
     x->right = y;
     y->left = T2;
 
-    // Оновлюємо висоти
-    updateHeight(y);
-    updateHeight(x);
+    update(y);
+    update(x);
 
     return x;
 }
@@ -24,13 +28,11 @@ AVLNode* AVLTree::rotateLeft(AVLNode* x)
     AVLNode* y = x->right;
     AVLNode* T2 = y->left;
 
-    // Виконуємо поворот
     y->left = x;
     x->right = T2;
 
-    // Оновлюємо висоти
-    updateHeight(x);
-    updateHeight(y);
+    update(x);
+    update(y);
 
     return y;
 }
@@ -39,38 +41,86 @@ AVLNode* AVLTree::balanceNode(AVLNode* node)
 {
     if (!node) return nullptr;
 
-    updateHeight(node);
+    update(node);
+
     int balance = getBalance(node);
 
-    // Лівий випадок (Left)
     if (balance > 1)
     {
-        // Left-Right Rotate
         if (getBalance(node->left) < 0)
-        {
             node->left = rotateLeft(node->left);
-        }
-        // Left-Left Rotate
         return rotateRight(node);
     }
 
-    // Правий випадок (Right)
     if (balance < -1)
     {
-        // Right-Left Rotate
         if (getBalance(node->right) > 0)
-        {
             node->right = rotateRight(node->right);
-        }
-        // Right-Right Rotate
         return rotateLeft(node);
     }
 
     return node;
 }
 
-// --- Основні операції ---
+// --- insert ---
+AVLNode* AVLTree::insert(AVLNode* node, const Student& s)
+{
+    if (!node) return new AVLNode(s);
 
+    if (s < node->data)
+        node->left = insert(node->left, s);
+    else if (s > node->data)
+        node->right = insert(node->right, s);
+    else
+        return node;
+
+    return balanceNode(node);
+}
+
+// --- findMin ---
+AVLNode* AVLTree::findMin(AVLNode* node) const
+{
+    return node->left ? findMin(node->left) : node;
+}
+
+// --- removeMin ---
+AVLNode* AVLTree::removeMin(AVLNode* node)
+{
+    if (!node->left)
+        return node->right;
+
+    node->left = removeMin(node->left);
+    return balanceNode(node);
+}
+
+// --- erase ---
+AVLNode* AVLTree::erase(AVLNode* node, const Student& s)
+{
+    if (!node) return nullptr;
+
+    if (s < node->data)
+        node->left = erase(node->left, s);
+    else if (s > node->data)
+        node->right = erase(node->right, s);
+    else
+    {
+        AVLNode* l = node->left;
+        AVLNode* r = node->right;
+        delete node;
+
+        if (!r) return l;
+
+        AVLNode* min = findMin(r);
+        min->right = removeMin(r);
+        min->left = l;
+
+        return balanceNode(min);
+    }
+
+    return balanceNode(node);
+}
+
+// --- clear ---
 void AVLTree::clear(AVLNode* node)
 {
     if (!node) return;
@@ -79,85 +129,59 @@ void AVLTree::clear(AVLNode* node)
     delete node;
 }
 
-AVLNode* AVLTree::insert(AVLNode* node, Student s)
+void AVLTree::split(AVLNode* node, const Student& key, AVLNode*& left, AVLNode*& right)
 {
     if (!node)
     {
-        treeSize++;
-        return new AVLNode(s);
+        left = right = nullptr;
+        return;
     }
 
-    if (s < node->data)
+    if (key < node->data)
     {
-        node->left = insert(node->left, s);
-    }
-    else if (s > node->data)
-    {
-        node->right = insert(node->right, s);
+        split(node->left, key, left, node->left);
+        right = balanceNode(node);
     }
     else
     {
-        return node; // Дублікати не додаємо
+        split(node->right, key, node->right, right);
+        left = balanceNode(node);
     }
-
-    return balanceNode(node);
 }
 
-AVLNode* AVLTree::findMin(AVLNode* node) const
+void AVLTree::split(const Student& key, AVLTree& l, AVLTree& r)
 {
-    AVLNode* current = node;
-    while (current && current->left)
-    {
-        current = current->left;
-    }
-    return current;
+    clear(l.root);
+    clear(r.root);
+
+    split(this->root, key, l.root, r.root);
+
+    this->root = nullptr;
 }
 
-AVLNode* AVLTree::erase(AVLNode* node, Student s)
+AVLNode* AVLTree::merge(AVLNode* left, AVLNode* right)
 {
-    if (!node) return nullptr;
+    if (!left) return right;
+    if (!right) return left;
 
-    if (s < node->data)
-    {
-        node->left = erase(node->left, s);
-    }
-    else if (s > node->data)
-    {
-        node->right = erase(node->right, s);
-    }
-    else
-    {
-        // Вузол знайдено
-        if (!node->left || !node->right)
-        {
-            AVLNode* temp = node->left ? node->left : node->right;
-            if (!temp)
-            {
-                temp = node;
-                node = nullptr;
-            }
-            else
-            {
-                *node = *temp; // Копіюємо дані нащадка
-            }
-            delete temp;
-            treeSize--;
-        }
-        else
-        {
-            // Вузол з двома дітьми
-            AVLNode* temp = findMin(node->right);
-            node->data = temp->data;
-            node->right = erase(node->right, temp->data);
-        }
-    }
+    AVLNode* min = findMin(right);
+    right = removeMin(right);
 
-    if (!node) return nullptr;
-    return balanceNode(node);
+    min->left = left;
+    min->right = right;
+
+    return balanceNode(min);
 }
 
-// --- Методи для піддерев ---
+void AVLTree::merge(AVLTree& other)
+{
+    root = merge(root, other.root);
+    other.root = nullptr;
+}
 
+// =====================
+// --- traversal ---
+// =====================
 void AVLTree::toVector(AVLNode* node, std::vector<Student>& res) const
 {
     if (!node) return;
@@ -171,36 +195,4 @@ std::vector<Student> AVLTree::toVector() const
     std::vector<Student> res;
     toVector(root, res);
     return res;
-}
-
-void AVLTree::merge(AVLTree& other)
-{
-    std::vector<Student> otherData = other.toVector();
-    for (const auto& s : otherData)
-    {
-        this->insert(s);
-    }
-    other.clear(other.root);
-    other.root = nullptr;
-    other.treeSize = 0;
-}
-
-void AVLTree::split(Student key, AVLTree& l, AVLTree& r)
-{
-    std::vector<Student> allData = this->toVector();
-    l.clear(l.root);
-    l.root = nullptr;
-    l.treeSize = 0;
-    r.clear(r.root);
-    r.root = nullptr;
-    r.treeSize = 0;
-
-    for (const auto& s : allData)
-    {
-        if (s < key) l.insert(s);
-        else r.insert(s);
-    }
-    this->clear(this->root);
-    this->root = nullptr;
-    this->treeSize = 0;
 }

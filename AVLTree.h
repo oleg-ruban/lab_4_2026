@@ -10,50 +10,57 @@ struct AVLNode
     Student data;
     AVLNode *left, *right;
     int height;
+    int size;
 
-    AVLNode(Student s) : data(s), left(nullptr), right(nullptr), height(1)
-    {
-    }
+    AVLNode(Student s)
+        : data(s), left(nullptr), right(nullptr), height(1), size(1)
+    {}
 };
 
 class AVLTree
 {
 private:
     AVLNode* root;
-    size_t treeSize;
 
     int getHeight(AVLNode* n) const { return n ? n->height : 0; }
-    int getBalance(AVLNode* n) const { return n ? getHeight(n->left) - getHeight(n->right) : 0; }
-    void updateHeight(AVLNode* n) { if (n) n->height = 1 + std::max(getHeight(n->left), getHeight(n->right)); }
+    int getSize(AVLNode* n) const { return n ? n->size : 0; }
+
+    void update(AVLNode* n);
+
+    int getBalance(AVLNode* n) const
+    {
+        return n ? getHeight(n->left) - getHeight(n->right) : 0;
+    }
 
     AVLNode* rotateRight(AVLNode* y);
     AVLNode* rotateLeft(AVLNode* x);
     AVLNode* balanceNode(AVLNode* node);
 
-    AVLNode* insert(AVLNode* node, Student s);
-    AVLNode* erase(AVLNode* node, Student s);
-    AVLNode* findMin(AVLNode* node) const; // Теж може бути const
+    AVLNode* insert(AVLNode* node, const Student& s);
+    AVLNode* erase(AVLNode* node, const Student& s);
+    AVLNode* findMin(AVLNode* node) const;
+    AVLNode* removeMin(AVLNode* node);
+
     void clear(AVLNode* node);
 
-public:
-    AVLTree() : root(nullptr), treeSize(0)
-    {
-    }
+    void split(AVLNode* node, const Student& key, AVLNode*& left, AVLNode*& right);
+    AVLNode* merge(AVLNode* left, AVLNode* right);
 
+    void toVector(AVLNode* node, std::vector<Student>& res) const;
+
+public:
+    AVLTree() : root(nullptr) {}
     ~AVLTree() { clear(root); }
 
-    void insert(Student s) { root = insert(root, s); }
-    void erase(Student s) { root = erase(root, s); }
+    void insert(const Student& s) { root = insert(root, s); }
+    void erase(const Student& s) { root = erase(root, s); }
 
-    // Тепер це працює правильно
     int height() const { return getHeight(root); }
-    size_t size() const { return treeSize; }
+    int size() const { return getSize(root); }
 
-    void split(Student key, AVLTree& l, AVLTree& r);
+    void split(const Student& key, AVLTree& l, AVLTree& r);
     void merge(AVLTree& other);
 
-    // Додано const до методів обходу
-    void toVector(AVLNode* node, std::vector<Student>& res) const;
     std::vector<Student> toVector() const;
 };
 
